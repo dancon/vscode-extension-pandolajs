@@ -17,7 +17,8 @@
 		"commands": [
 			{
 				"command": "catCoding.start",
-				"title": "Cat Coding"
+				"title": "Cat Coding",
+				"category": "Cat Coding"
 			}
 		]
 	},
