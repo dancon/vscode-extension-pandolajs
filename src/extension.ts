@@ -1,6 +1,5 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 const cats = {
 	'Coding Cat': 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
@@ -17,14 +16,37 @@ export function activate(context: vscode.ExtensionContext) {
 			'catCoding',
 			'Cat Coding',
 			vscode.ViewColumn.One,
-			{}
+			{
+				localResourceRoots: [
+					vscode.Uri.file(path.join(context.extensionPath, 'resources')),
+					vscode.Uri.file(path.join(context.extensionPath, 'src'))
+				]
+			}
 		);
 
-		panel.webview.html = getWebviewContent(cats['Coding Cat']);
+		const pandolaLogo = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'pandora.png'));
+		const pandolaLogoPath = pandolaLogo.with({
+			scheme: 'vscode-resource'
+		});
+
+		const style = vscode.Uri.file(path.join(context.extensionPath, 'src', 'extension.css'));
+		const stylePath = style.with({
+			scheme: 'vscode-resource'
+		});
+
+		panel.webview.html = getWebviewContent({
+			cat: cats['Coding Cat'],
+			logo: pandolaLogoPath,
+			style: stylePath
+		});
 
 		const updateWebviewForCat = (cat: keyof typeof cats) => {
 			panel.title = cat;
-			panel.webview.html = getWebviewContent(cats[cat]);
+			panel.webview.html = getWebviewContent({
+				cat: cats[cat],
+				logo: pandolaLogoPath,
+				style: stylePath
+			});
 		};
 
 		panel.onDidChangeViewState((event) => {
@@ -57,17 +79,19 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 }
 
-function getWebviewContent (cat: string) {
+function getWebviewContent ({ cat, logo, style }: {cat: string, logo?: vscode.Uri, style?: vscode.Uri}) {
 	return `
 		<!DOCTYPE html>
 		<html>
 			<head>
 				<meta charset="UTF-8">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<link rel="stylesheet" href="${style}"></link>
 				<title>Cat Coding</title>
 			</head>
 			<body>
-				<h1>Cat Coding</h1>
+				<img src="${logo}" width="108" />
+				<h1 class="text">Cat Coding</h1>
 				<img src="${cat}" width="300" />
 			</body>
 		</html>
