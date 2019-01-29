@@ -6,33 +6,32 @@ import * as vscode from 'vscode';
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-		console.log('Congratulations, your extension "pandolajs" is now active!');
+	console.log('Congratulations, your extension "pandolajs" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
+	let currentPanel: vscode.WebviewPanel | undefined = undefined;
+
 	let disposable = vscode.commands.registerCommand('catCoding.start', () => {
-		// 创建一个 webview
-		const panel = vscode.window.createWebviewPanel(
-			'catCoding',
-			'Cat Coding',
-			vscode.ViewColumn.One,
-			{}
-		);
+		const columnToShowIn = vscode.window.activeTextEditor
+			? vscode.window.activeTextEditor.viewColumn
+			: undefined;
+
+		if (currentPanel) {
+			currentPanel.reveal(columnToShowIn);
+		} else {
+			currentPanel = vscode.window.createWebviewPanel(
+				'catCoding',
+				'Cat Coding',
+				columnToShowIn || vscode.ViewColumn.One,
+				{}
+			);
+		}
 
 		// 设置 panel 的内容
-		panel.webview.html = getWebviewContent('https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif');
+		currentPanel.webview.html = getWebviewContent('https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif');
 
-		const timeId = setTimeout(() => {
-			panel.dispose();
-		}, 5000);
-
-		panel.onDidDispose(
+		currentPanel.onDidDispose(
 			() => {
-				console.log('Webview 销毁了');
-				clearTimeout(timeId);
+				currentPanel = undefined;
 			},
 			null,
 			context.subscriptions
