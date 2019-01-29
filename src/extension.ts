@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { Script } from 'vm';
 
 const cats = {
 	'Coding Cat': 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
@@ -20,7 +21,8 @@ export function activate(context: vscode.ExtensionContext) {
 				localResourceRoots: [
 					vscode.Uri.file(path.join(context.extensionPath, 'resources')),
 					vscode.Uri.file(path.join(context.extensionPath, 'src'))
-				]
+				],
+				enableScripts: true
 			}
 		);
 
@@ -34,10 +36,16 @@ export function activate(context: vscode.ExtensionContext) {
 			scheme: 'vscode-resource'
 		});
 
+		const script = vscode.Uri.file(path.join(context.extensionPath, 'src', 'webview.js'));
+		const scriptPath = script.with({
+			scheme: 'vscode-resource'
+		});
+
 		panel.webview.html = getWebviewContent({
 			cat: cats['Coding Cat'],
 			logo: pandolaLogoPath,
-			style: stylePath
+			style: stylePath,
+			script: scriptPath
 		});
 
 		const updateWebviewForCat = (cat: keyof typeof cats) => {
@@ -45,7 +53,8 @@ export function activate(context: vscode.ExtensionContext) {
 			panel.webview.html = getWebviewContent({
 				cat: cats[cat],
 				logo: pandolaLogoPath,
-				style: stylePath
+				style: stylePath,
+				script: scriptPath
 			});
 		};
 
@@ -79,7 +88,13 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 }
 
-function getWebviewContent ({ cat, logo, style }: {cat: string, logo?: vscode.Uri, style?: vscode.Uri}) {
+function getWebviewContent ({ cat, logo, style, script }: {
+	cat: string,
+	logo?:
+	vscode.Uri,
+	style?: vscode.Uri,
+	script?: vscode.Uri
+}) {
 	return `
 		<!DOCTYPE html>
 		<html>
@@ -93,6 +108,9 @@ function getWebviewContent ({ cat, logo, style }: {cat: string, logo?: vscode.Ur
 				<img src="${logo}" width="108" />
 				<h1 class="text">Cat Coding</h1>
 				<img src="${cat}" width="300" />
+				<h1 class="line-of-code">0</h1>
+
+				<script src="${script}"></script>
 			</body>
 		</html>
 	`;
