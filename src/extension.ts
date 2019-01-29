@@ -2,36 +2,52 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+const cats = {
+	'Coding Cat': 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
+	'Compiling Cat': 'https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif',
+	'Testing Cat': 'https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif'
+};
+
 export function activate(context: vscode.ExtensionContext) {
 
 	console.log('Congratulations, your extension "pandolajs" is now active!');
 
-	let currentPanel: vscode.WebviewPanel | undefined = undefined;
-
 	let disposable = vscode.commands.registerCommand('catCoding.start', () => {
-		const columnToShowIn = vscode.window.activeTextEditor
-			? vscode.window.activeTextEditor.viewColumn
-			: undefined;
+		const panel = vscode.window.createWebviewPanel(
+			'catCoding',
+			'Cat Coding',
+			vscode.ViewColumn.One,
+			{}
+		);
 
-		if (currentPanel) {
-			currentPanel.reveal(columnToShowIn);
-		} else {
-			currentPanel = vscode.window.createWebviewPanel(
-				'catCoding',
-				'Cat Coding',
-				columnToShowIn || vscode.ViewColumn.One,
-				{}
-			);
-		}
+		panel.webview.html = getWebviewContent(cats['Coding Cat']);
 
-		// 设置 panel 的内容
-		currentPanel.webview.html = getWebviewContent('https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif');
+		const updateWebviewForCat = (cat: keyof typeof cats) => {
+			panel.title = cat;
+			panel.webview.html = getWebviewContent(cats[cat]);
+		};
 
-		currentPanel.onDidDispose(
+		panel.onDidChangeViewState((event) => {
+			const panel = event.webviewPanel;
+
+			switch (panel.viewColumn) {
+				case vscode.ViewColumn.One:
+					updateWebviewForCat('Coding Cat');
+					break;
+				case vscode.ViewColumn.Two:
+					updateWebviewForCat('Compiling Cat');
+					break;
+				case vscode.ViewColumn.Three:
+					updateWebviewForCat('Testing Cat');
+					break;
+			}
+		},
+		null,
+		context.subscriptions);
+
+		panel.onDidDispose(
 			() => {
-				currentPanel = undefined;
+				console.log('Webview 关闭了');
 			},
 			null,
 			context.subscriptions
